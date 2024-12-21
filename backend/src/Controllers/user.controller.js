@@ -83,7 +83,5 @@ const login = async (req, res) => {
   } catch (error) {}
 };
 
-
-
 exports.register = register;
 exports.login = login;
