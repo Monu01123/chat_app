@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const validator = require("validator");
 const userModel = require("../Models/user.model");
+const e = require("express");
 
 const register = async (req, res) => {
   const { email, fullname, password } = req.body;
@@ -83,5 +84,13 @@ const login = async (req, res) => {
   } catch (error) {}
 };
 
+
+const logout = async (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ message: "User logged out successfully" });
+};
+
+
 exports.register = register;
 exports.login = login;
+exports.logout = logout;
