@@ -5,6 +5,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./db");
 const user = require("./src/Routes/user.route");
+const message = require("./src/Routes/message.route");
 
 dotenv.config();
 const app = express();
@@ -23,6 +24,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/", user);
+app.use("/",message);
 
 // initializeSocket(server);
 
