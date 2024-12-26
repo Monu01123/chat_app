@@ -1,19 +1,27 @@
 const Message = require("../models/message.model");
 const User = require("../models/user.model");
+const cloudinary = require("../cloudanary");
 
 const sendMessage = async (req, res) => {
   try {
-    const { text, image } = req.body;
-    const { id: receiverId } = req.params;
-    const senderId = req.user._id;
+    const { text } = req.body; // Extract text
+    const { id: receiverId } = req.params; 
+    const senderId = req.user._id; 
 
     let imageUrl = null;
-    if (image) {
+    if (req.file) { // Check if file is present
       try {
-        // Check if the image is properly formatted
-        const uploadResponse = await cloudinary.uploader.upload(image, {
-          folder: "chat_app",
-        });
+        const uploadResponse = await cloudinary.uploader.upload_stream(
+          {
+            folder: "chat_app",
+          },
+          (error, result) => {
+            if (error) {
+              throw error;
+            }
+            return result;
+          }
+        ).end(req.file.buffer); // Use buffer from multer
         imageUrl = uploadResponse.secure_url;
       } catch (err) {
         console.error("Error uploading image to Cloudinary: ", err.message);
@@ -22,18 +30,13 @@ const sendMessage = async (req, res) => {
     }
 
     const newMessage = new Message({
-      senderId,
-      receiverId,
+      sender: senderId,  
+      receiver: receiverId,  
       text,
       image: imageUrl,
     });
 
     await newMessage.save();
-
-    const receiverSocketId = getReceiverSocketId(receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
-    }
 
     res.status(201).json(newMessage);
   } catch (error) {
@@ -42,16 +45,17 @@ const sendMessage = async (req, res) => {
   }
 };
 
+
 const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
-    console.log("Logged in user ID:", loggedInUserId); 
+    console.log("Logged in user ID:", loggedInUserId);
 
     const filteredUsers = await User.find({
       _id: { $ne: loggedInUserId },
     }).select("-password");
 
-    console.log("Filtered users:", filteredUsers); 
+    console.log("Filtered users:", filteredUsers);
 
     res.status(200).json(filteredUsers);
   } catch (error) {
