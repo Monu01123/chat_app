@@ -1,11 +1,12 @@
 const express = require("express");
 const Router = express.Router();
-const { sendMessages } = require("../Controllers/message.controller");
+const { sendMessage,getUsersForSidebar,getMessages } = require("../Controllers/message.controller");
+const protectRoute = require("../middleware/auth.middleware");
 
-Router.post("/send-message",sendMessages);
+Router.post("/send-message",protectRoute,sendMessage);
 
-Router.get("/get-messages", (req, res) => {
-  res.send("Messages retrieved successfully");
-});
+Router.get("/get-users",protectRoute,getUsersForSidebar);
+
+Router.get("/get-messages/:id",protectRoute,getMessages);
 
 module.exports = Router;

@@ -6,9 +6,11 @@ const dotenv = require("dotenv");
 const connectDB = require("./db");
 const user = require("./src/Routes/user.route");
 const message = require("./src/Routes/message.route");
+const cookieParser = require("cookie-parser");
 
 dotenv.config();
 const app = express();
+app.use(cookieParser());
 // const server = http.createServer(app);
 connectDB();
 
