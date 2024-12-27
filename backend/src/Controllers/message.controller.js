@@ -2,26 +2,34 @@ const Message = require("../models/message.model");
 const User = require("../models/user.model");
 const cloudinary = require("../cloudanary");
 
+// cloudinary.config({
+//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+//   api_key: process.env.CLOUDINARY_API_KEY,
+//   api_secret: process.env.CLOUDINARY_API_SECRET,
+// });
+
 const sendMessage = async (req, res) => {
   try {
-    const { text } = req.body; // Extract text
-    const { id: receiverId } = req.params; 
-    const senderId = req.user._id; 
+    const { text } = req.body;
+    const { id: receiverId } = req.params;
+    const senderId = req.user._id;
 
     let imageUrl = null;
-    if (req.file) { // Check if file is present
+
+    if (req.file) {
       try {
-        const uploadResponse = await cloudinary.uploader.upload_stream(
-          {
-            folder: "chat_app",
-          },
-          (error, result) => {
-            if (error) {
-              throw error;
+        // Upload file buffer to Cloudinary
+        const uploadResponse = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            { folder: "chat_app" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
             }
-            return result;
-          }
-        ).end(req.file.buffer); // Use buffer from multer
+          );
+          uploadStream.end(req.file.buffer); // Send file buffer to Cloudinary
+        });
+
         imageUrl = uploadResponse.secure_url;
       } catch (err) {
         console.error("Error uploading image to Cloudinary: ", err.message);
@@ -30,17 +38,16 @@ const sendMessage = async (req, res) => {
     }
 
     const newMessage = new Message({
-      sender: senderId,  
-      receiver: receiverId,  
+      sender: senderId,
+      receiver: receiverId,
       text,
       image: imageUrl,
     });
 
     await newMessage.save();
-
     res.status(201).json(newMessage);
   } catch (error) {
-    console.error("Error in sendMessage controller: ", error.message);
+    console.error("Error in sendMessage controller:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
