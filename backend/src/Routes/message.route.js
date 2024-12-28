@@ -10,4 +10,3 @@ Router.get("/get-users",protectRoute,getUsersForSidebar);
 Router.get("/get-messages/",protectRoute,getMessages);
 
 module.exports = Router;
-//sorry no light due to heavy rain 😴😴😴😴😴
