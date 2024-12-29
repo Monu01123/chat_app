@@ -18,7 +18,6 @@ const sendMessage = async (req, res) => {
 
     if (req.file) {
       try {
-        // Upload file buffer to Cloudinary
         const uploadResponse = await new Promise((resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
             { folder: "chat_app" },
@@ -27,7 +26,7 @@ const sendMessage = async (req, res) => {
               else resolve(result);
             }
           );
-          uploadStream.end(req.file.buffer); // Send file buffer to Cloudinary
+          uploadStream.end(req.file.buffer); 
         });
 
         imageUrl = uploadResponse.secure_url;
