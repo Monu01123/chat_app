@@ -13,9 +13,7 @@ const sendMessage = async (req, res) => {
     const { text } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
-
     let imageUrl = null;
-
     if (req.file) {
       try {
         const uploadResponse = await new Promise((resolve, reject) => {

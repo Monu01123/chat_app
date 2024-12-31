@@ -90,7 +90,17 @@ const logout = async (req, res) => {
   res.status(200).json({ message: "User logged out successfully" });
 };
 
+const checkAuth = (req, res) => {
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    console.log("Error in checkAuth controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 
 exports.register = register;
 exports.login = login;
 exports.logout = logout;
+exports.checkAuth = checkAuth;
