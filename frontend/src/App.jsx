@@ -1,202 +1,150 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Register from "./Component/Auth/Register.jsx";
-import Login from "./Component/Auth/Login.jsx";
+// Frontend (React)
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import io from 'socket.io-client';
+
+const socket = io('http://localhost:3000');
 
 function App() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [token, setToken] = useState(localStorage.getItem('token') || '');
+  const [users, setUsers] = useState([]);
+  const [activeUsers, setActiveUsers] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [currentRecipient, setCurrentRecipient] = useState('');
+  const [currentMessage, setCurrentMessage] = useState('');
+
+  useEffect(() => {
+    if (token) {
+      const loggedInUser = localStorage.getItem('username');
+      setUsername(loggedInUser);
+      socket.emit('join', loggedInUser);
+      axios.get('http://localhost:3000/users').then((res) => setUsers(res.data));
+    }
+  }, [token]);
+
+  useEffect(() => {
+    socket.on('activeUsers', (users) => setActiveUsers(users));
+    socket.on('newMessage', (message) => {
+      if (
+        (message.sender === username && message.recipient === currentRecipient) ||
+        (message.sender === currentRecipient && message.recipient === username)
+      ) {
+        setMessages((prev) => [...prev, message]);
+      }
+    });
+
+    socket.on('loadOldMessages', (loadedMessages) => {
+      setMessages((prev) => [...prev, ...loadedMessages]);
+    });
+
+    return () => {
+      socket.off('activeUsers');
+      socket.off('newMessage');
+      socket.off('loadOldMessages');
+    };
+  }, [currentRecipient, username]);
+
+  useEffect(() => {
+    if (currentRecipient) {
+      axios
+        .get('http://localhost:3000/messages', {
+          params: { sender: username, recipient: currentRecipient },
+        })
+        .then((res) => setMessages(res.data));
+    }
+  }, [currentRecipient, username]);
+
+  const signup = async () => {
+    try {
+      await axios.post('http://localhost:3000/signup', { username, password });
+      alert('Signup successful');
+    } catch (err) {
+      alert('Signup failed');
+    }
+  };
+
+  const login = async () => {
+    try {
+      const { data } = await axios.post('http://localhost:3000/login', { username, password });
+      setToken(data.token);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('username', username);
+      socket.emit('join', username);
+    } catch (err) {
+      alert('Login failed');
+    }
+  };
+
+  const logout = () => {
+    setToken('');
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    setUsername('');
+    setPassword('');
+    setCurrentRecipient('');
+    setMessages([]);
+  };
+
+  const sendMessage = () => {
+    if (!currentRecipient) {
+      alert('Please select a recipient');
+      return;
+    }
+    const message = { sender: username, recipient: currentRecipient, content: currentMessage };
+    socket.emit('message', message);
+    setCurrentMessage('');
+  };
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/register" element={<Register />} />
-        <Route path="/" element={<Login />} />
-      </Routes>
-    </Router>
+    <div>
+      {!token ? (
+        <div>
+          <input placeholder="Username" onChange={(e) => setUsername(e.target.value)} />
+          <input placeholder="Password" type="password" onChange={(e) => setPassword(e.target.value)} />
+          <button onClick={signup}>Sign Up</button>
+          <button onClick={login}>Log In</button>
+        </div>
+      ) : (
+        <div>
+          <button onClick={logout}>Log Out</button>
+          <h3>All Users</h3>
+          <ul>
+            {users.map((user, index) => (
+              <li
+                key={index}
+                onClick={() => setCurrentRecipient(user.username)}
+                style={{ cursor: 'pointer', color: activeUsers.includes(user.username) ? 'green' : 'black' }}
+              >
+                {user.username}
+              </li>
+            ))}
+          </ul>
+
+          <h3>Messages with {currentRecipient || 'Select a user'}</h3>
+          <div style={{ border: '1px solid black', padding: '10px', height: '300px', overflowY: 'scroll' }}>
+            {messages.map((msg, index) => (
+              <p key={index}>
+                <b>{msg.sender}:</b> {msg.content}
+              </p>
+            ))}
+          </div>
+
+          {currentRecipient && (
+            <div>
+              <input
+                placeholder="Type your message"
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+              />
+              <button onClick={sendMessage}>Send</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
 export default App;
-
-// import React, { useState, useEffect } from "react";
-// import { io } from "socket.io-client";
-
-// const socket = io("http://localhost:5000");
-
-// function App() {
-//   const [nickname, setNickname] = useState("");
-//   const [message, setMessage] = useState("");
-//   const [messages, setMessages] = useState([]);
-//   const [onlineUsers, setOnlineUsers] = useState([]);
-//   const [isNicknameSet, setIsNicknameSet] = useState(false);
-//   const [typing, setTyping] = useState("");
-//   const [privateRecipient, setPrivateRecipient] = useState("");
-//   const [privateMessage, setPrivateMessage] = useState("");
-
-//   const handleNicknameSubmit = (e) => {
-//     e.preventDefault();
-//     if (nickname.trim()) {
-//       socket.emit("setNickname", nickname);
-//       setIsNicknameSet(true);
-//     }
-//   };
-
-//   useEffect(() => {
-//     socket.on("chatMessage", (msg) => {
-//       setMessages((prevMessages) => [...prevMessages, msg]);
-//     });
-
-//     socket.on("privateMessage", (msg) => {
-//       setMessages((prevMessages) => [
-//         ...prevMessages,
-//         { nickname: msg.nickname, message: `Private: ${msg.message}` },
-//       ]);
-//     });
-
-//     socket.on("typing", (nickname) => {
-//       setTyping(`${nickname} is typing...`);
-//     });
-
-//     socket.on("stopTyping", () => {
-//       setTyping("");
-//     });
-
-//     socket.on("onlineUsers", (users) => {
-//       setOnlineUsers(users);
-//     });
-
-//     return () => {
-//       socket.off("chatMessage");
-//       socket.off("privateMessage");
-//       socket.off("typing");
-//       socket.off("stopTyping");
-//       socket.off("onlineUsers");
-//     };
-//   }, []);
-
-//   const sendMessage = (e) => {
-//     e.preventDefault();
-//     if (message.trim()) {
-//       const newMessage = { nickname, message };
-//       setMessages((prevMessages) => [...prevMessages, newMessage]);
-//       setMessage("");
-//       socket.emit("chatMessage", newMessage);
-//       socket.emit("stopTyping");
-//     }
-//   };
-
-//   const sendPrivateMessage = (e) => {
-//     e.preventDefault();
-//     if (privateMessage.trim() && privateRecipient.trim()) {
-//       socket.emit("privateMessage", {
-//         recipient: privateRecipient,
-//         message: privateMessage,
-//         nickname,
-//       });
-//       setPrivateMessage("");
-//     }
-//   };
-
-//   const handleTyping = (e) => {
-//     setMessage(e.target.value);
-//     if (e.target.value && !typing) {
-//       socket.emit("typing", nickname);
-//     }
-//     if (!e.target.value) {
-//       socket.emit("stopTyping");
-//     }
-//   };
-
-//   return (
-//     <div>
-//       {!isNicknameSet ? (
-//         <form onSubmit={handleNicknameSubmit}>
-//           <h1>Enter your nickname</h1>
-//           <input
-//             type="text"
-//             value={nickname}
-//             onChange={(e) => setNickname(e.target.value)}
-//             placeholder="Your nickname"
-//             required
-//             style={{ padding: "8px", fontSize: "16px" }}
-//           />
-//           <button
-//             type="submit"
-//             style={{ padding: "8px 16px", fontSize: "16px" }}
-//           >
-//             Join Chat
-//           </button>
-//         </form>
-//       ) : (
-//         <div>
-//           <h1>Chat Room</h1>
-//           <div
-//             id="online-users"
-//             style={{
-//               marginBottom: "10px",
-//               borderBottom: "1px solid #ccc",
-//               paddingBottom: "10px",
-//             }}
-//           >
-//             <h3>Online Users</h3>
-//             <ul>
-//               {onlineUsers.map((user, index) => (
-//                 <li key={index}>{user}</li>
-//               ))}
-//             </ul>
-//           </div>
-//           <div
-//             id="chat-box"
-//             style={{
-//               height: "300px",
-//               overflowY: "scroll",
-//               border: "1px solid #ccc",
-//               padding: "10px",
-//               marginBottom: "10px",
-//             }}
-//           >
-//             {messages.map((msg, index) => (
-//               <div key={index}>
-//                 <strong>{msg.nickname}:</strong> {msg.message}
-//               </div>
-//             ))}
-//           </div>
-//           <div>{typing}</div>
-//           <form onSubmit={sendMessage} style={{ display: "flex" }}>
-//             <input
-//               type="text"
-//               value={message}
-//               onChange={handleTyping}
-//               placeholder="Type a message..."
-//               style={{ flex: "1", padding: "8px" }}
-//             />
-//             <button type="submit" style={{ padding: "8px 16px" }}>
-//               Send
-//             </button>
-//           </form>
-
-//           <h3>Send Private Message</h3>
-//           <form onSubmit={sendPrivateMessage}>
-//             <input
-//               type="text"
-//               value={privateRecipient}
-//               onChange={(e) => setPrivateRecipient(e.target.value)}
-//               placeholder="Recipient's nickname"
-//               style={{ padding: "8px", marginRight: "10px" }}
-//             />
-//             <input
-//               type="text"
-//               value={privateMessage}
-//               onChange={(e) => setPrivateMessage(e.target.value)}
-//               placeholder="Your private message"
-//               style={{ padding: "8px", marginRight: "10px" }}
-//             />
-//             <button type="submit" style={{ padding: "8px 16px" }}>
-//               Send Private Message
-//             </button>
-//           </form>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// export default App;
