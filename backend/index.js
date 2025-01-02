@@ -1,3 +1,6 @@
+// Setting up a MERN stack chat application with Socket.IO
+
+// Server-Side (Node.js + Express + MongoDB + Socket.IO)
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -6,6 +9,8 @@ const { Server } = require('socket.io');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -14,6 +19,18 @@ const io = new Server(server, {
     origin: '*',
   },
 });
+
+// Configure file upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+const upload = multer({ storage });
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Models
 const User = mongoose.model('User', new mongoose.Schema({
@@ -25,6 +42,8 @@ const Message = mongoose.model('Message', new mongoose.Schema({
   sender: String,
   recipient: String,
   content: String,
+  type: { type: String, default: 'text' },
+  fileUrl: String,
   timestamp: { type: Date, default: Date.now },
 }));
 
@@ -89,6 +108,10 @@ app.get('/messages', async (req, res) => {
   }
 });
 
+app.post('/upload', upload.single('file'), (req, res) => {
+  res.status(200).json({ fileUrl: `/uploads/${req.file.filename}` });
+});
+
 // Socket.IO Connection
 const activeUsers = new Map();
 
@@ -105,8 +128,8 @@ io.on('connection', (socket) => {
     io.to(socket.id).emit('loadOldMessages', messages);
   });
 
-  socket.on('message', async ({ sender, recipient, content }) => {
-    const message = new Message({ sender, recipient, content });
+  socket.on('message', async ({ sender, recipient, content, type, fileUrl }) => {
+    const message = new Message({ sender, recipient, content, type, fileUrl });
     await message.save();
 
     if (activeUsers.has(recipient)) {

@@ -14,6 +14,7 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [currentRecipient, setCurrentRecipient] = useState('');
   const [currentMessage, setCurrentMessage] = useState('');
+  const [file, setFile] = useState(null);
 
   useEffect(() => {
     if (token) {
@@ -87,14 +88,24 @@ function App() {
     setMessages([]);
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!currentRecipient) {
       alert('Please select a recipient');
       return;
     }
-    const message = { sender: username, recipient: currentRecipient, content: currentMessage };
-    socket.emit('message', message);
-    setCurrentMessage('');
+
+    if (file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await axios.post('http://localhost:3000/upload', formData);
+      const message = { sender: username, recipient: currentRecipient, type: 'file', fileUrl: data.fileUrl };
+      socket.emit('message', message);
+      setFile(null);
+    } else {
+      const message = { sender: username, recipient: currentRecipient, content: currentMessage, type: 'text' };
+      socket.emit('message', message);
+      setCurrentMessage('');
+    }
   };
 
   return (
@@ -126,7 +137,7 @@ function App() {
           <div style={{ border: '1px solid black', padding: '10px', height: '300px', overflowY: 'scroll' }}>
             {messages.map((msg, index) => (
               <p key={index}>
-                <b>{msg.sender}:</b> {msg.content}
+                <b>{msg.sender}:</b> {msg.type === 'text' ? msg.content : <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">View File</a>}
               </p>
             ))}
           </div>
@@ -138,6 +149,7 @@ function App() {
                 value={currentMessage}
                 onChange={(e) => setCurrentMessage(e.target.value)}
               />
+              <input type="file" onChange={(e) => setFile(e.target.files[0])} />
               <button onClick={sendMessage}>Send</button>
             </div>
           )}
