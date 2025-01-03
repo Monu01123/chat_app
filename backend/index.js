@@ -1,7 +1,3 @@
-// Setting up a MERN stack chat application with Socket.IO
-
-// Server-Side (Node.js + Express + MongoDB + Socket.IO)
-
 const express = require('express');
 const mongoose = require('mongoose');
 const http = require('http');
@@ -10,6 +6,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 const path = require('path');
 
 const app = express();
@@ -20,17 +18,23 @@ const io = new Server(server, {
   },
 });
 
-// Configure file upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: 'dp7mm7aog', 
+  api_key: '398632473657626',       
+  api_secret: 'j2OHBWj0NXx11FlCiAhKPtI4vjI', 
+});
+
+// Configure Multer Storage with Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'chat-app', // Specify a folder in your Cloudinary account
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif'], // Allowed file formats
   },
 });
+
 const upload = multer({ storage });
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Models
 const User = mongoose.model('User', new mongoose.Schema({
@@ -109,7 +113,10 @@ app.get('/messages', async (req, res) => {
 });
 
 app.post('/upload', upload.single('file'), (req, res) => {
-  res.status(200).json({ fileUrl: `/uploads/${req.file.filename}` });
+  if (!req.file || !req.file.path) {
+    return res.status(400).send('No file uploaded');
+  }
+  res.status(200).json({ fileUrl: req.file.path }); // Cloudinary URL
 });
 
 // Socket.IO Connection

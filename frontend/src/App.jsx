@@ -1,4 +1,3 @@
-// Frontend (React)
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
@@ -137,7 +136,16 @@ function App() {
           <div style={{ border: '1px solid black', padding: '10px', height: '300px', overflowY: 'scroll' }}>
             {messages.map((msg, index) => (
               <p key={index}>
-                <b>{msg.sender}:</b> {msg.type === 'text' ? msg.content : <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">View File</a>}
+                <b>{msg.sender}:</b>{' '}
+                {msg.type === 'text' ? (
+                  msg.content
+                ) : (
+                  <img
+                    src={msg.fileUrl}
+                    alt="file"
+                    style={{ maxWidth: '100px', maxHeight: '100px' }}
+                  />
+                )}
               </p>
             ))}
           </div>
