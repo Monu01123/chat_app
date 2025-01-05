@@ -1,15 +1,42 @@
-const Router = require("express").Router();
-const { register, login, logout,checkAuth } = require("../Controllers/user.controller");
-const protectRoute = require("../middleware/auth.middleware");
+const express = require("express");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const User = require('../models/user.model');
+const app = express();
 
-Router.post("/register", register);
+app.post("/signup", async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ username, password: hashedPassword });
+    await user.save();
+    res.status(201).send("User registered successfully");
+  } catch (err) {
+    res.status(400).send("Error registering user");
+  }
+});
 
-Router.post("/login", login);
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const user = await User.findOne({ username });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).send("Invalid credentials");
+    }
+    const token = jwt.sign({ username }, "secretkey");
+    res.status(200).json({ token });
+  } catch (err) {
+    res.status(400).send("Error logging in");
+  }
+});
 
-Router.post("/update-profile", login);
+app.get("/users", async (req, res) => {
+  try {
+    const users = await User.find().select("username -_id");
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).send("Error fetching users");
+  }
+});
 
-Router.post("/logout", logout);
-
-Router.get("/check", protectRoute, checkAuth);
-
-module.exports = Router;
+module.exports = app;

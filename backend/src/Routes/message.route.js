@@ -1,12 +1,47 @@
 const express = require("express");
-const Router = express.Router();
-const { sendMessage,getUsersForSidebar,getMessages } = require("../Controllers/message.controller");
-const protectRoute = require("../middleware/auth.middleware");
+const message = require("../models/message.model");
+const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("cloudinary").v2;
 
-Router.post("/send-message/:id",protectRoute,sendMessage);
+const app = express();
 
-Router.get("/get-users",protectRoute,getUsersForSidebar);
+cloudinary.config({
+  cloud_name: "dp7mm7aog",
+  api_key: "398632473657626",
+  api_secret: "j2OHBWj0NXx11FlCiAhKPtI4vjI",
+});
 
-Router.get("/get-messages/",protectRoute,getMessages);
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'chat-app', 
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif'], 
+  },
+});
+const upload = multer({ storage });
 
-module.exports = Router;
+
+app.get("/messages", async (req, res) => {
+  const { sender, recipient } = req.query;
+  try {
+    const messages = await Message.find({
+      $or: [
+        { sender, recipient },
+        { sender: recipient, recipient: sender },
+      ],
+    }).sort("timestamp");
+    res.status(200).json(messages);
+  } catch (err) {
+    res.status(500).send("Error fetching messages");
+  }
+});
+
+app.post("/upload", upload.single("file"), (req, res) => {
+  if (!req.file || !req.file.path) {
+    return res.status(400).send("No file uploaded");
+  }
+  res.status(200).json({ fileUrl: req.file.path }); // Cloudinary URL
+});
+
+module.exports = app;
