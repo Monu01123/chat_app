@@ -1,7 +1,7 @@
 const express = require("express");
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const User = require('../models/user.model');
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const User = require("../models/user.model");
 const app = express();
 
 app.post("/signup", async (req, res) => {
@@ -15,6 +15,7 @@ app.post("/signup", async (req, res) => {
     res.status(400).send("Error registering user");
   }
 });
+
 
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
