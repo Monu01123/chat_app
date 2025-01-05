@@ -1,26 +1,27 @@
 const express = require("express");
-const message = require("../models/message.model");
+const Message = require("../models/message.model");
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
+const path = require("path");
 
 const app = express();
 
 cloudinary.config({
-  cloud_name: "dp7mm7aog",
-  api_key: "398632473657626",
-  api_secret: "j2OHBWj0NXx11FlCiAhKPtI4vjI",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'chat-app', 
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif'], 
+    folder: "chat-app",
+    allowed_formats: ["jpg", "jpeg", "png", "gif"],
   },
 });
-const upload = multer({ storage });
 
+const upload = multer({ storage });
 
 app.get("/messages", async (req, res) => {
   const { sender, recipient } = req.query;

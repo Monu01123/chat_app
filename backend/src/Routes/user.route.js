@@ -20,10 +20,10 @@ app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.findOne({ username });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user || !bcrypt.compare(password, user.password)) {
       return res.status(401).send("Invalid credentials");
     }
-    const token = jwt.sign({ username }, "secretkey");
+    const token = jwt.sign({ username }, process.env.JWT_SECRET);
     res.status(200).json({ token });
   } catch (err) {
     res.status(400).send("Error logging in");

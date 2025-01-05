@@ -1,61 +1,58 @@
-const socketIo = require("socket.io");
+const { Server } = require("socket.io");
+const Message = require("./src/models/message.model");
 
-let users = {};
+const activeUsers = new Map();
 
-function initializeSocket(server) {
-    
-  const io = socketIo(server, {
+const socketHandler = (server) => {
+  const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173",
-      methods: ["GET", "POST"],
-      allowedHeaders: ["Content-Type"],
+      origin: "*",
     },
   });
 
   io.on("connection", (socket) => {
-    socket.on("setNickname", (nickname) => {
-      users[socket.id] = nickname;
-      socket.broadcast.emit("chatMessage", {
-        nickname: "Server",
-        message: `${nickname} has joined the chat!`,
-      });
-      io.emit("onlineUsers", Object.values(users));
+    console.log("A user connected");
+
+    socket.on("join", async (username) => {
+      activeUsers.set(username, socket.id);
+      io.emit("activeUsers", Array.from(activeUsers.keys()));
+
+      const messages = await Message.find({
+        recipient: username,
+      }).sort("timestamp");
+      io.to(socket.id).emit("loadOldMessages", messages);
     });
 
-    socket.on("chatMessage", (data) => {
-      socket.broadcast.emit("chatMessage", data);
-    });
+    socket.on(
+      "message",
+      async ({ sender, recipient, content, type, fileUrl }) => {
+        const message = new Message({
+          sender,
+          recipient,
+          content,
+          type,
+          fileUrl,
+        });
+        await message.save();
 
-    socket.on("privateMessage", (data) => {
-      const { recipient, message, nickname } = data;
-      for (const [socketId, user] of Object.entries(users)) {
-        if (user === recipient) {
-          io.to(socketId).emit("privateMessage", { nickname, message });
-          break;
+        if (activeUsers.has(recipient)) {
+          io.to(activeUsers.get(recipient)).emit("newMessage", message);
         }
+        io.to(socket.id).emit("newMessage", message);
       }
-    });
-
-    socket.on("typing", (nickname) => {
-      socket.broadcast.emit("typing", nickname);
-    });
-
-    socket.on("stopTyping", () => {
-      socket.broadcast.emit("stopTyping");
-    });
+    );
 
     socket.on("disconnect", () => {
-      const nickname = users[socket.id];
-      if (nickname) {
-        socket.broadcast.emit("chatMessage", {
-          nickname: "Server",
-          message: `${nickname} has left the chat!`,
-        });
-        delete users[socket.id];
-        io.emit("onlineUsers", Object.values(users));
+      const username = Array.from(activeUsers.keys()).find(
+        (key) => activeUsers.get(key) === socket.id
+      );
+      if (username) {
+        activeUsers.delete(username);
+        io.emit("activeUsers", Array.from(activeUsers.keys()));
       }
+      console.log("A user disconnected");
     });
   });
-}
+};
 
-module.exports = { initializeSocket };
+module.exports = { socketHandler };
