@@ -15,6 +15,7 @@ function App() {
   const [currentMessage, setCurrentMessage] = useState('');
   const [file, setFile] = useState(null);
 
+  // Load initial user data and join socket room
   useEffect(() => {
     if (token) {
       const loggedInUser = localStorage.getItem('username');
@@ -24,6 +25,7 @@ function App() {
     }
   }, [token]);
 
+  // Listen for socket events
   useEffect(() => {
     socket.on('activeUsers', (users) => setActiveUsers(users));
     socket.on('newMessage', (message) => {
@@ -35,24 +37,21 @@ function App() {
       }
     });
 
-    socket.on('loadOldMessages', (loadedMessages) => {
-      setMessages((prev) => [...prev, ...loadedMessages]);
-    });
-
     return () => {
       socket.off('activeUsers');
       socket.off('newMessage');
-      socket.off('loadOldMessages');
     };
   }, [currentRecipient, username]);
 
+  // Fetch messages for the selected recipient
   useEffect(() => {
     if (currentRecipient) {
       axios
         .get('http://localhost:3000/messages', {
           params: { sender: username, recipient: currentRecipient },
         })
-        .then((res) => setMessages(res.data));
+        .then((res) => setMessages(res.data))
+        .catch(() => setMessages([])); // Clear messages if fetch fails
     }
   }, [currentRecipient, username]);
 

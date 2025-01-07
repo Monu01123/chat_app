@@ -12,12 +12,17 @@ const Chat = ({ token, logout }) => {
   const [currentMessage, setCurrentMessage] = useState('');
   const [file, setFile] = useState(null);
 
+  // Fetch users and join socket room
   useEffect(() => {
     if (token) {
       socket.emit('join', username);
-      axios.get('http://localhost:3000/users').then((res) => setUsers(res.data));
+      axios
+        .get('http://localhost:3000/users')
+        .then((res) => setUsers(res.data))
+        .catch(() => alert('Failed to fetch users'));
     }
 
+    // Listen for active users and new messages
     socket.on('activeUsers', (users) => setActiveUsers(users));
     socket.on('newMessage', (message) => {
       if (
@@ -34,23 +39,39 @@ const Chat = ({ token, logout }) => {
     };
   }, [token, username, currentRecipient]);
 
+  // Fetch messages for the current recipient
+  useEffect(() => {
+    if (currentRecipient) {
+      axios
+        .get('http://localhost:3000/messages', {
+          params: { sender: username, recipient: currentRecipient },
+        })
+        .then((res) => setMessages(res.data))
+        .catch(() => alert('Failed to fetch messages'));
+    }
+  }, [currentRecipient, username]);
+
   const sendMessage = async () => {
     if (!currentRecipient) {
       alert('Please select a recipient');
       return;
     }
 
-    if (file) {
-      const formData = new FormData();
-      formData.append('file', file);
-      const { data } = await axios.post('http://localhost:3000/upload', formData);
-      const message = { sender: username, recipient: currentRecipient, type: 'file', fileUrl: data.fileUrl };
-      socket.emit('message', message);
-      setFile(null);
-    } else {
-      const message = { sender: username, recipient: currentRecipient, content: currentMessage, type: 'text' };
-      socket.emit('message', message);
-      setCurrentMessage('');
+    try {
+      if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const { data } = await axios.post('http://localhost:3000/upload', formData);
+        const message = { sender: username, recipient: currentRecipient, type: 'file', fileUrl: data.fileUrl };
+        socket.emit('message', message);
+        setFile(null);
+      } else {
+        const message = { sender: username, recipient: currentRecipient, content: currentMessage, type: 'text' };
+        socket.emit('message', message);
+        setCurrentMessage('');
+      }
+    } catch (err) {
+      alert('Failed to send message');
     }
   };
 
@@ -60,7 +81,10 @@ const Chat = ({ token, logout }) => {
       <UsersList
         users={users}
         activeUsers={activeUsers}
-        setCurrentRecipient={setCurrentRecipient}
+        setCurrentRecipient={(recipient) => {
+          setCurrentRecipient(recipient);
+          setMessages([]); // Clear messages before fetching
+        }}
       />
       <div>
         <h3>Messages with {currentRecipient || 'Select a user'}</h3>
