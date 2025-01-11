@@ -21,9 +21,7 @@ const ChatContainer = () => {
 
   useEffect(() => {
     getMessages(selectedUser._id);
-
     subscribeToMessages();
-
     return () => unsubscribeFromMessages();
   }, [
     selectedUser._id,
@@ -51,7 +49,13 @@ const ChatContainer = () => {
   return (
     <div className="flex-1 flex flex-col overflow-auto">
       <ChatHeader />
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+        style={{
+          scrollbarWidth: "thin",
+          scrollbarColor: "rgba(255, 255, 255, 0.1) transparent", // For Firefox
+        }}
+      >
         {messages.map((message) => (
           <div
             key={message._id}
