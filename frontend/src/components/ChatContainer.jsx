@@ -53,42 +53,70 @@ const ChatContainer = () => {
         className="flex-1 overflow-y-auto p-4 space-y-4"
         style={{
           scrollbarWidth: "thin",
-          scrollbarColor: "rgba(255, 255, 255, 0.1) transparent", // For Firefox
+          scrollbarColor: "rgba(255, 255, 255, 0.1) transparent",
         }}
       >
         {messages.map((message) => (
           <div
             key={message._id}
-            className={`chat ${
-              message.senderId === authUser._id ? "chat-end" : "chat-start"
+            className={`flex ${
+              message.senderId === authUser._id
+                ? "justify-end"
+                : "justify-start"
             }`}
             ref={messageEndRef}
           >
-            <div className=" chat-image avatar">
-              <div className="size-8 rounded-full border">
-                <img
-                  src={
-                    message.senderId === authUser._id
-                      ? authUser.profilePic || "/avatar.png"
-                      : selectedUser.profilePic || "/avatar.png"
-                  }
-                  alt="profile pic"
-                />
-              </div>
-            </div>
-
-            <div className="chat-bubble flex flex-col pt-1 pb-1 px-1 rounded-[10px]">
+            <div
+              className={`relative flex flex-col items-end max-w-[60%] rounded-lg p-2 shadow-sm
+      ${
+        message.senderId === authUser._id
+          ? "bg-primary text-primary-content"
+          : "bg-base-200 text-base-content"
+      }`}
+            >
+              {/* Image Message */}
               {message.image && (
-                <img
-                  src={message.image}
-                  alt="Attachment"
-                  className="sm:max-w-[200px] rounded-md mb-2"
-                />
+                <div className="relative">
+                  <img
+                    src={message.image}
+                    alt="Attachment"
+                    className="sm:max-w-[200px] rounded-md"
+                  />
+                  {!message.text && (
+                    <p
+                      className={`absolute bottom-1 right-1 text-[10px] bg-black/40 px-1.5 py-0.5 rounded text-white ${
+                        message.senderId === authUser._id
+                          ? "text-primary-content/80"
+                          : "text-base-content/80"
+                      }`}
+                    >
+                      {formatMessageTime(message.createdAt)}
+                    </p>
+                  )}
+                </div>
               )}
-              {message.text && <p className="text-xs pl-1">{message.text}</p>}
-              <time className="text-[9px] opacity-50 ml-0 self-end">
-                {formatMessageTime(message.createdAt)}
-              </time>
+
+              {/* Text Message */}
+              {message.text && (
+                <div
+                  className={`inline-flex items-end gap-2 ${
+                    message.image ? "max-w-[200px]" : "max-w-full"
+                  }`}
+                >
+                  <p className="text-sm whitespace-pre-wrap break-all overflow-hidden">
+                    {message.text.trim()}
+                  </p>
+                  <span
+                    className={`text-[9px] shrink-0 self-end relative translate-y-[1px] ${
+                      message.senderId === authUser._id
+                        ? "text-primary-content/70"
+                        : "text-base-content/70"
+                    }`}
+                  >
+                    {formatMessageTime(message.createdAt)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         ))}

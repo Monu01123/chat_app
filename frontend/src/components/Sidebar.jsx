@@ -43,7 +43,7 @@ const Sidebar = () => {
         </div>
       </div>
 
-      <div className="overflow-y-auto w-full py-3">
+      <div className="overflow-y-auto w-full py-3 thin-scrollbar">
         {filteredUsers.map((user) => (
           <button
             key={user._id}
@@ -62,7 +62,7 @@ const Sidebar = () => {
               <img
                 src={user.profilePic || "/avatar.png"}
                 alt={user.name}
-                className="size-9 object-cover rounded-full"
+                className="size-11 object-cover rounded-full"
               />
               {onlineUsers.includes(user._id) && (
                 <span
@@ -76,7 +76,7 @@ const Sidebar = () => {
               <div className="font-medium truncate text-[12px]">
                 {user.fullName}
               </div>
-              <div className="text-[7px] text-sm text-zinc-400">
+              <div className="text-[10px]  text-zinc-400">
                 {onlineUsers.includes(user._id) ? "Online" : "Offline"}
               </div>
             </div>
