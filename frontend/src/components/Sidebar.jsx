@@ -2,17 +2,20 @@ import { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
-import { Users } from "lucide-react";
+import { Users, Plus } from "lucide-react";
+import CreateGroupModal from "./CreateGroupModal";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } =
+  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading, getChats, chats, setSelectedChat, accessChat, selectedChat } =
     useChatStore();
-  const { onlineUsers } = useAuthStore();
+  const { onlineUsers, authUser } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
 
   useEffect(() => {
     getUsers();
-  }, [getUsers]);
+    getChats();
+  }, [getUsers, getChats]);
 
   const filteredUsers = showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
@@ -25,8 +28,18 @@ const Sidebar = () => {
       <div className="border-b border-base-300 w-full p-5">
         <div className="flex items-center gap-2">
           <Users className="size-6" />
-          <span className="font-medium hidden lg:block">Available to Chat</span>
+          <span className="font-medium hidden lg:block">Chats</span>
         </div>
+        
+        {/* Create Group Button */}
+        <button 
+           onClick={() => setShowCreateGroup(true)}
+           className="mt-4 w-full flex items-center gap-2 btn btn-sm btn-ghost justify-start"
+        >
+           <Plus className="size-4" />
+           <span className="hidden lg:block">Create Group</span>
+        </button>
+
         <div className="mt-3 hidden lg:flex items-center gap-2">
           <label className="cursor-pointer flex items-center gap-2">
             <input
@@ -35,24 +48,51 @@ const Sidebar = () => {
               onChange={(e) => setShowOnlineOnly(e.target.checked)}
               className="checkbox checkbox-sm"
             />
-            <span className="text-sm">Show online only</span>
+            <span className="text-sm">Online only</span>
           </label>
-          <span className="text-xs text-zinc-500">
-            ({onlineUsers.length - 1} online)
-          </span>
         </div>
       </div>
 
       <div className="overflow-y-auto w-full py-3 thin-scrollbar">
+        {/* Group Chats Section */}
+        {chats.filter(c => c.isGroupChat).length > 0 && (
+           <div className="mb-4">
+              <div className="px-5 text-xs font-semibold text-zinc-500 mb-2 hidden lg:block">GROUPS</div>
+              {chats.filter(c => c.isGroupChat).map(chat => (
+                  <button
+                    key={chat._id}
+                    onClick={() => setSelectedChat(chat)}
+                    className={`
+                      w-full p-3 flex items-center gap-2
+                      hover:bg-base-300 transition-colors
+                      ${selectedChat?._id === chat._id ? "bg-base-300 ring-1 ring-base-300" : ""}
+                    `}
+                  >
+                    <div className="size-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                        {chat.chatName.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="hidden lg:block text-left min-w-0">
+                       <div className="font-medium truncate">{chat.chatName}</div>
+                    </div>
+                  </button>
+              ))}
+           </div>
+        )}
+
+        <div className="px-5 text-xs font-semibold text-zinc-500 mb-2 hidden lg:block">DIRECT MESSAGES</div>
         {filteredUsers.map((user) => (
           <button
             key={user._id}
-            onClick={() => setSelectedUser(user)}
+            onClick={() => accessChat(user._id)}
             className={`
               w-full p-3 flex items-center gap-2
               hover:bg-base-300 transition-colors
               ${
-                selectedUser?._id === user._id
+                // Check if this user corresponds to the selectedChat (if 1-1)
+                // Logic: selectedChat exists, !isGroupChat, and users contains this user
+                selectedChat && 
+                !selectedChat.isGroupChat && 
+                selectedChat.users.some(u => u._id === user._id)
                   ? "bg-base-300 ring-1 ring-base-300"
                   : ""
               }
@@ -87,6 +127,8 @@ const Sidebar = () => {
           <div className="text-center text-zinc-500 py-4">No online users</div>
         )}
       </div>
+
+      {showCreateGroup && <CreateGroupModal onClose={() => setShowCreateGroup(false)} />}
     </aside>
   );
 };

@@ -10,7 +10,11 @@ const messageSchema = new mongoose.Schema(
     receiverId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false, // Changed to false as messages now belong to a chat
+    },
+    chat: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Chat",
     },
     text: {
       type: String,
@@ -18,6 +22,38 @@ const messageSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    status: {
+      type: String,
+      enum: ["sent", "delivered", "read"],
+      default: "sent",
+    },
+    readBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    reactions: [
+        {
+          from: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+          },
+          emoji: {
+            type: String,
+            required: true
+          }
+        }
+    ],
+    lockedUntil: {
+        type: Date,
+        default: null
+    },
+    translations: {
+        type: Map,
+        of: String,
+        default: {}
+    }
   },
   { timestamps: true }
 );

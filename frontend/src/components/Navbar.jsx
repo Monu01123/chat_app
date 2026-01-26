@@ -42,6 +42,25 @@ const Navbar = () => {
             </Link>
 
             {authUser && (
+              <div className="dropdown dropdown-end">
+                <div tabIndex={0} role="button" className="btn btn-ghost btn-circle btn-sm">
+                   <img 
+                      src={`https://flagcdn.com/w40/${authUser.language === 'en' ? 'gb' : authUser.language === 'es' ? 'es' : authUser.language === 'fr' ? 'fr' : authUser.language === 'de' ? 'de' : 'gb'}.png`} 
+                      alt="Lang" 
+                      className="w-5 h-5 rounded-full object-cover"
+                   />
+                </div>
+                <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                   <li><button onClick={() => useAuthStore.getState().updateProfile({ language: 'en' })}>🇬🇧 English</button></li>
+                   <li><button onClick={() => useAuthStore.getState().updateProfile({ language: 'es' })}>🇪🇸 Español</button></li>
+                   <li><button onClick={() => useAuthStore.getState().updateProfile({ language: 'fr' })}>🇫🇷 Français</button></li>
+                   <li><button onClick={() => useAuthStore.getState().updateProfile({ language: 'de' })}>🇩🇪 Deutsch</button></li>
+                   <li><button onClick={() => useAuthStore.getState().updateProfile({ language: 'hi' })}>🇮🇳 Hindi</button></li>
+                </ul>
+              </div>
+            )}
+
+            {authUser && (
               <>
                 <button className="flex gap-2 items-center" onClick={logout}>
                   <LogOut className="size-5" />
