@@ -1,15 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .glass-effect {
+    @apply backdrop-blur-lg bg-base-100/70 border-b border-base-200/50;
+  }
+  
+  .glass-panel {
+    @apply backdrop-blur-md bg-base-200/40 border border-white/10 shadow-xl;
+  }
+}
 
 .thin-scrollbar {
-  scrollbar-width:thin;             
-  scrollbar-color: #a1a1aa transparent;
+  scrollbar-width: thin;             
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
 .thin-scrollbar::-webkit-scrollbar {
-  width: 2px;  
+  width: 4px;  
 }
 
 .thin-scrollbar::-webkit-scrollbar-track {
@@ -17,8 +28,12 @@
 }
 
 .thin-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #a1a1aa; 
+  background-color: rgba(255, 255, 255, 0.1); 
   border-radius: 9999px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.2); 
 }
 
 .scrollbar-hide::-webkit-scrollbar {

@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
     "axios": "^1.7.7",
     "chat-app": "file:..",
     "lucide-react": "^0.459.0",
@@ -18,6 +20,7 @@
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.28.0",
     "socket.io-client": "^4.8.1",
+    "three": "^0.182.0",
     "zustand": "^5.0.1"
   },
   "devDependencies": {

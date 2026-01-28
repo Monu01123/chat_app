@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 
@@ -37,24 +37,37 @@ const ChatHeader = () => {
   return (
     <div className="p-1.5 border-b border-base-300">
       <div className="flex items-center justify-between">
-        <div 
-           className={`flex items-center gap-2 ${selectedChat?.isGroupChat ? "cursor-pointer hover:bg-base-200 rounded-md p-1 transition-colors" : ""}`}
-           onClick={() => selectedChat?.isGroupChat && setShowGroupInfo(true)}
-        >
-          <div className="avatar">
-            <div className="size-10 rounded-full relative">
-              <img
-                src={chatImage || "/avatar.png"}
-                alt={chatName}
-              />
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+          {/* Back Button for Mobile */}
+          <button 
+             className="min-[650px]:hidden p-1 rounded-full hover:bg-base-200 transition-colors"
+             onClick={() => {
+                 setSelectedChat(null);
+                 setSelectedUser(null);
+             }}
+          >
+             <ArrowLeft className="size-5" />
+          </button>
 
-          <div>
-            <h3 className="font-medium text-[12px]">{chatName}</h3>
-            <p className="text-[9px] text-base-content/70 leading-tight">
-              {selectedChat?.isGroupChat ? `${selectedChat.users.length} members (Click for Info)` : (isOnline ? "Online" : "Offline")}
-            </p>
+          <div 
+             className={`flex items-center gap-2 ${selectedChat?.isGroupChat ? "cursor-pointer hover:bg-base-200 rounded-md p-1 transition-colors" : ""}`}
+             onClick={() => selectedChat?.isGroupChat && setShowGroupInfo(true)}
+          >
+            <div className="avatar">
+              <div className="size-10 rounded-full relative">
+                <img
+                  src={chatImage || "/avatar.png"}
+                  alt={chatName}
+                />
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-[12px]">{chatName}</h3>
+              <p className="text-[9px] text-base-content/70 leading-tight">
+                {selectedChat?.isGroupChat ? `${selectedChat.users.length} members (Click for Info)` : (isOnline ? "Online" : "Offline")}
+              </p>
+            </div>
           </div>
         </div>
 

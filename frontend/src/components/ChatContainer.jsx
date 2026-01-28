@@ -118,12 +118,12 @@ const ChatContainer = () => {
             ref={messageEndRef}
             onMouseLeave={() => setHoveredMessageId(null)}
           >
-            <div
-              className={`relative flex flex-col items-end max-w-[60%] rounded-lg p-2 shadow-sm
+          <div
+            className={`relative flex flex-col items-end max-w-[75%] rounded-2xl p-3 shadow-md transition-all
       ${
         message.senderId._id === authUser._id
-          ? "bg-primary text-primary-content"
-          : "bg-base-200 text-base-content"
+          ? "bg-primary text-primary-content rounded-tr-none"
+          : "bg-base-200 text-base-content rounded-tl-none border border-base-300/50"
       }`}
             >
                   {/* Time Capsule Logic */}
