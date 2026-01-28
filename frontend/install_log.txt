@@ -1,0 +1,61 @@
+﻿node.exe : npm error code ERESOLVE
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm  
+   error code ERESOLVE:String) [], RemoteExcepti  
+  on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: 
+@react-three/drei@10.7.7
+npm error Found: react@18.3.1
+npm error node_modules/react
+npm error   react@"^18.3.1" from the root project
+npm error   peerOptional react@">=18.0.0" from 
+zustand@5.0.10
+npm error   node_modules/@react-three/fiber/node_m
+odules/zustand
+npm error     zustand@"^5.0.3" from 
+@react-three/fiber@9.5.0
+npm error     node_modules/@react-three/fiber
+npm error       @react-three/fiber@"^9.5.0" from 
+the root project
+npm error       1 more (@react-three/drei)
+npm error   11 more (@use-gesture/react, 
+lucide-react, react-dom, ...)
+npm error
+npm error Could not resolve dependency:
+npm error peer react@"^19" from 
+@react-three/drei@10.7.7
+npm error node_modules/@react-three/drei
+npm error   @react-three/drei@"^10.7.7" from the 
+root project
+npm error
+npm error Conflicting peer dependency: 
+react@19.2.4
+npm error node_modules/react
+npm error   peer react@"^19" from 
+@react-three/drei@10.7.7
+npm error   node_modules/@react-three/drei
+npm error     @react-three/drei@"^10.7.7" from 
+the root project
+npm error
+npm error Fix the upstream dependency conflict, 
+or retry
+npm error this command with --force or 
+--legacy-peer-deps
+npm error to accept an incorrect (and potentially 
+broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\monum\AppData\Local\npm-cache\_
+logs\2026-01-28T20_01_37_329Z-eresolve-report.txt
+npm error A complete log of this run can be found 
+in: C:\Users\monum\AppData\Local\npm-cache\_logs\2
+026-01-28T20_01_37_329Z-debug-0.log
